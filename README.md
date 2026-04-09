@@ -8,6 +8,7 @@ Raw Data → Python Ingestion → Parquet → PostgreSQL → BigQuery → dbt �
 
 ## What This Project Does
 
+This pipeline follows an ELT architecture where raw data is ingested, loaded into a warehouse, and transformed into analytics-ready models.
 This project implements a complete analytics pipeline for U.S. flight delay data.
 
 It ingests multiple data sources including flight records, weather data, and holiday information, transforms them into standardized datasets, models them in BigQuery using dbt, and orchestrates the workflow with Apache Airflow.
@@ -34,6 +35,7 @@ The goal of the project is to answer business and operational questions such as:
 
 - Python
 - PostgreSQL
+- SQL
 - Google Cloud Storage
 - Google BigQuery
 - dbt
@@ -88,6 +90,7 @@ The goal of the project is to answer business and operational questions such as:
 - Data quality testing with dbt
 - Environment-based configuration without hardcoded secrets
 - Portable local setup using Docker
+- ELT pipeline architecture
 
 ## Setup
 
@@ -212,6 +215,7 @@ Completed components:
 
 ## Summary
 
+This project reflects a production-style data engineering workflow, including orchestration, testing, monitoring, and configuration management.
 This project demonstrates how to design and implement a production-style end-to-end data pipeline with ingestion, transformation, testing, and orchestration layers.
 
 It focuses on modularity, reproducibility, data quality, and analytics readiness, while also reflecting real-world engineering concerns such as scheduling, retries, alerting, and configuration management.
