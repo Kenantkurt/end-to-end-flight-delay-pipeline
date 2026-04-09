@@ -1,0 +1,38 @@
+# Virtual env
+.venv/
+venv/
+venv311/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Data
+data/raw/
+data/processed/
+
+# Logs
+logs/
+*.log
+
+# dbt
+target/
+dbt_packages/
+flight_dbt/target/
+flight_dbt/logs/
+flight_dbt/dbt_packages/
+
+# Airflow local state
+airflow/logs/
+airflow/airflow_db/
+airflow/credentials/
+airflow/dbt/profiles.yml
+airflow/dags/__pycache__/
+
+# Mac
+.DS_Store

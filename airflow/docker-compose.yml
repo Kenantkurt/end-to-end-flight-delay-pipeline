@@ -1,0 +1,33 @@
+services:
+  airflow:
+    build: .
+    container_name: airflow
+    restart: always
+
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow_db/airflow.db
+      - GOOGLE_APPLICATION_CREDENTIALS=/opt/airflow/credentials/service_account.json
+
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./airflow_db:/opt/airflow/airflow_db
+      - ${DBT_PROJECT_HOST_DIR:-../flight_dbt}:/opt/airflow/flight_dbt
+      - ./credentials:/opt/airflow/credentials:ro
+      - ${DBT_PROFILES_HOST_DIR:-./dbt}:/home/airflow/.dbt:ro
+      
+
+    ports:
+      - "8080:8080"
+
+    command: >
+      bash -c "
+      mkdir -p /opt/airflow/airflow_db &&
+      airflow db migrate &&
+      sleep 10 &&
+      { airflow users create --username ${AIRFLOW_ADMIN_USERNAME:-admin} --password ${AIRFLOW_ADMIN_PASSWORD:-admin} --firstname ${AIRFLOW_ADMIN_FIRSTNAME:-Airflow} --lastname ${AIRFLOW_ADMIN_LASTNAME:-Admin} --role Admin --email ${AIRFLOW_ADMIN_EMAIL:-admin@example.com} || echo 'Admin user already exists, skipping creation.'; } &&
+      airflow scheduler &
+      exec airflow webserver
+      "

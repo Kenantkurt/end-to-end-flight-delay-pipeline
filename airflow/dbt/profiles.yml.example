@@ -1,0 +1,12 @@
+flight_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: your-gcp-project-id
+      dataset: flight_data
+      threads: 4
+      timeout_seconds: 300
+      location: EU
+      keyfile: /opt/airflow/credentials/service_account.json

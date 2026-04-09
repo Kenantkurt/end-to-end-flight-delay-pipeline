@@ -1,0 +1,187 @@
+version: 2
+
+models:
+
+  # -------------------------------------------------------
+  - name: enriched_flights
+    description: "Joined dataset combining flight delays, weather, and holiday data"
+    columns:
+      - name: flight_date
+        description: "Date of the flight"
+        tests:
+          - not_null
+
+      - name: airline_code
+        description: "Airline code"
+        tests:
+          - not_null
+
+      - name: flight_number
+        description: "Flight number"
+        tests:
+          - not_null
+
+      - name: origin_airport_id
+        description: "Origin airport ID"
+        tests:
+          - not_null
+
+      - name: is_cancelled
+        description: "Indicates if flight is cancelled"
+        tests:
+          - not_null
+
+      - name: is_diverted
+        description: "Indicates if flight is diverted"
+        tests:
+          - not_null
+
+  # -------------------------------------------------------
+  - name: fct_airline_delay_summary
+    description: "Aggregated delay metrics by airline"
+    columns:
+      - name: airline_code
+        description: "Unique airline code"
+        tests:
+          - not_null
+          - unique
+
+      - name: total_departure_delay_hours
+        description: "Total departure delay hours per airline"
+        tests:
+          - not_null
+
+      - name: total_arrival_delay_hours
+        description: "Total arrival delay hours per airline"
+        tests:
+          - not_null
+
+      - name: avg_departure_delay_hours
+        description: "Average departure delay hours per airline"
+        tests:
+          - not_null
+
+      - name: avg_arrival_delay_hours
+        description: "Average arrival delay hours per airline"
+        tests:
+          - not_null
+
+      - name: total_flights
+        description: "Total number of flights"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+
+      - name: delayed_flights
+        description: "Number of delayed flights"
+        tests:
+          - not_null
+
+      - name: delay_rate
+        description: "Delay rate per airline"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+
+  # -------------------------------------------------------
+  - name: fct_airport_departure_delay_summary
+    description: "Aggregated departure delay metrics by airport"
+    columns:
+      - name: origin_airport_id
+        description: "Unique airport ID"
+        tests:
+          - not_null
+          - unique
+
+      - name: total_departure_delay_hours
+        description: "Total departure delay hours per airport"
+        tests:
+          - not_null
+
+      - name: avg_departure_delay_hours
+        description: "Average departure delay hours per airport"
+        tests:
+          - not_null
+
+      - name: total_flights
+        description: "Total flights per airport"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+
+      - name: delayed_flights
+        description: "Delayed flights per airport"
+        tests:
+          - not_null
+
+      - name: delay_rate
+        description: "Delay rate per airport"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+
+  # -------------------------------------------------------
+  - name: fct_weather_delay_impact_summary
+    description: "Comparison of delay rates between bad and good weather"
+    columns:
+      - name: weather_condition
+        description: "Weather category (bad_weather / good_weather)"
+        tests:
+          - not_null
+
+      - name: total_flights
+        description: "Total flights in each weather condition"
+        tests:
+          - not_null
+
+      - name: delayed_flights
+        description: "Delayed flights in each condition"
+        tests:
+          - not_null
+
+      - name: delay_rate
+        description: "Delay rate by weather condition"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+
+  # -------------------------------------------------------
+  - name: fct_holiday_delay_impact_summary
+    description: "Comparison of delay rates between holiday and non-holiday periods"
+    columns:
+      - name: is_holiday
+        description: "1 = holiday, 0 = non-holiday"
+        tests:
+          - not_null
+
+      - name: total_flights
+        description: "Total flights per group"
+        tests:
+          - not_null
+
+      - name: delayed_flights
+        description: "Delayed flights per group"
+        tests:
+          - not_null
+
+      - name: delay_rate
+        description: "Delay rate per group"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1

@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: flight_data
+    database: flight-delay-project-491019
+    schema: flight_data
+
+    tables:
+      - name: airlines
+      - name: airports
+      - name: flight_delays
+      - name: holidays
+      - name: flight_weather
+      - name: enriched_flights
+    
+    

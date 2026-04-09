@@ -1,0 +1,130 @@
+version: 2
+
+models:
+  - name: stg_flight_delays
+    description: "Cleaned flight delay data at flight-level grain"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - flight_date
+            - airline_code
+            - flight_number
+            - origin_airport_id
+            - destination_airport_id
+
+    columns:
+      - name: flight_date
+        description: "Date of the flight"
+        tests:
+          - not_null
+
+      - name: airline_code
+        description: "Airline carrier code"
+        tests:
+          - not_null
+
+      - name: flight_number
+        description: "Flight number"
+        tests:
+          - not_null
+
+      - name: origin_airport_id
+        description: "Origin airport ID"
+        tests:
+          - not_null
+
+      - name: destination_airport_id
+        description: "Destination airport ID"
+        tests:
+          - not_null
+
+      - name: is_cancelled
+        description: "Indicates if flight was cancelled"
+        tests:
+          - not_null
+
+      - name: is_diverted
+        description: "Indicates if flight was diverted"
+        tests:
+          - not_null
+
+  - name: stg_airlines
+    description: "Cleaned airlines data"
+    columns:
+      - name: airline_code
+        description: "Airline carrier code"
+        tests:
+          - not_null
+          - unique
+      - name: airline_name
+        description: "Name of airlines"
+        tests:
+          - not_null
+
+  - name: stg_airports
+    description: "Cleaned airports data"
+    columns:
+      - name: airport_id
+        description: "Unique airport ID's"
+        tests:
+          - not_null
+          - unique
+      - name: airport_name
+        description: "Name of the airports"
+        tests:
+          - not_null
+
+
+  - name: stg_holidays
+    description: "Cleaned holidays data"
+    columns:
+      - name: date
+        description: "Date of the holiday"
+        tests:
+          - not_null
+          - unique
+      - name: holiday_name
+        description: "Name of the holiday"
+        tests:
+          - not_null
+
+  - name: stg_weather
+    description: "Flight-level data enriched with weather information"
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - flight_date
+              - airline_code
+              - flight_number
+              - origin_airport_id
+              - destination_airport_id
+
+    columns:
+      - name: flight_date
+        description: "Date of the flight"
+        tests:
+          - not_null
+
+      - name: airline_code
+        description: "Airline carrier code"
+        tests:
+          - not_null
+
+      - name: flight_number
+        description: "Flight number"
+        tests:
+          - not_null
+
+      - name: origin_airport_id
+        description: "Origin airport ID"
+        tests:
+          - not_null
+
+      - name: destination_airport_id
+        description: "Destination airport ID"
+        tests:
+          - not_null
+
+     
