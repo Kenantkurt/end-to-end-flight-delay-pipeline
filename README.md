@@ -4,7 +4,7 @@ Production-style end-to-end data pipeline for flight delay analytics using Pytho
 
 ## Architecture
 
-Raw Data -> Python Ingestion -> Parquet -> PostgreSQL / BigQuery -> dbt -> Airflow
+Raw Data → Python Ingestion → Parquet → PostgreSQL → BigQuery → dbt → Airflow
 
 ## What This Project Does
 
