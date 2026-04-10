@@ -217,7 +217,7 @@ The dashboard provides insights into airline performance, delay drivers, and ope
 ![Delay Drivers](dashboard/screenshots/divers%20of%20flight%20delays.png)
 
 ### Recommendations
-![Recommendations](dashboard/screenshots/Recommendations%20for%20Reducing%20Flight.png)
+![Recommendations](dashboard/screenshots/Recommendations%20for%20Reducing%20Flight%20Delays.png)
 
 ## Known Limitations
 
