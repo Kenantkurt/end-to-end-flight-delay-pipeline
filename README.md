@@ -205,21 +205,19 @@ This project includes a business intelligence dashboard built on top of the tran
 
 The dashboard provides insights into airline performance, delay drivers, and operational inefficiencies.
 
-### Overview
+## Dashboard
 
+### Overview
 ![Overview](dashboard/screenshots/overview.png)
 
 ### Airline Performance
-
-![Airline Analysis](dashboard/screenshots/airline_analysis.png)
+![Airline Analysis](dashboard/screenshots/flight%20delay%20analysis.png)
 
 ### Delay Drivers
-
-![Delay Drivers](dashboard/screenshots/delay_drivers.png)
+![Delay Drivers](dashboard/screenshots/divers%20of%20flight%20delays.png)
 
 ### Recommendations
-
-![Recommendations](dashboard/screenshots/recommendations.png)
+![Recommendations](dashboard/screenshots/Recommendations%20for%20Reducing%20Flight.png)
 
 ## Known Limitations
 
