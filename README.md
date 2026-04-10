@@ -219,6 +219,14 @@ The dashboard provides insights into airline performance, delay drivers, and ope
 ### Recommendations
 ![Recommendations](dashboard/screenshots/Recommendations%20for%20Reducing%20Flight%20Delays.png)
 
+## Dashboard Insights
+
+- Delay rates are moderately higher under bad weather conditions, confirming environmental impact on operations  
+- Holiday periods do not significantly affect delay rates, indicating stable scheduling performance  
+- Delay rates vary considerably across airports, highlighting operational inefficiencies at specific locations  
+- High-volume airlines tend to maintain more stable delay performance compared to smaller carriers  
+- Airport-level differences appear to be a stronger driver of delays than external factors like holidays
+
 ## Known Limitations
 
 - Weather enrichment uses a simplified approach and does not yet represent full airport-level weather coverage for every flight
