@@ -199,6 +199,28 @@ Completed components:
 - Airflow orchestration
 - scheduling, retries, and failure notifications
 
+## Dashboard
+
+This project includes a business intelligence dashboard built on top of the transformed data models.
+
+The dashboard provides insights into airline performance, delay drivers, and operational inefficiencies.
+
+### Overview
+
+![Overview](dashboard/screenshots/overview.png)
+
+### Airline Performance
+
+![Airline Analysis](dashboard/screenshots/airline_analysis.png)
+
+### Delay Drivers
+
+![Delay Drivers](dashboard/screenshots/delay_drivers.png)
+
+### Recommendations
+
+![Recommendations](dashboard/screenshots/recommendations.png)
+
 ## Known Limitations
 
 - Weather enrichment uses a simplified approach and does not yet represent full airport-level weather coverage for every flight
