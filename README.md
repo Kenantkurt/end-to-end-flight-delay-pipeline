@@ -1,6 +1,6 @@
 # Flight Delay Pipeline
 
-Production-style end-to-end data pipeline for flight delay analytics using Python, Parquet, PostgreSQL, BigQuery, dbt, and Apache Airflow.
+End-to-end analytics engineering pipeline for flight delay analysis built with Python, Parquet, PostgreSQL, BigQuery, dbt, and Apache Airflow.
 
 ## Architecture
 
@@ -186,7 +186,6 @@ Main mart outputs include:
 
 ## Current Status
 
-This project is end-to-end and portfolio-ready.
 
 Completed components:
 
@@ -205,7 +204,6 @@ This project includes a business intelligence dashboard built on top of the tran
 
 The dashboard provides insights into airline performance, delay drivers, and operational inefficiencies.
 
-## Dashboard
 
 ### Overview
 ![Overview](dashboard/screenshots/overview.png)
