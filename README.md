@@ -1,100 +1,149 @@
 # Flight Delay Pipeline
 
-Flight delay analytics pipeline built with Python, Parquet, PostgreSQL, BigQuery, dbt, and Apache Airflow.
+An end-to-end ELT analytics pipeline for U.S. flight delay data, built with Python, Parquet, PostgreSQL, BigQuery, dbt, and Apache Airflow.
+
+---
 
 ## Architecture
 
-## Pipeline:
-   Raw Data → Python Ingestion → Parquet → PostgreSQL → BigQuery → dbt
+```
+Raw Data → Python Ingestion → Parquet → PostgreSQL → BigQuery → dbt (Staging → Marts)
+                                                                        ↑
+                                                               Airflow (scheduled)
+```
 
-## Orchestration:
-   Airflow (dbt run & test)
+**Pattern:** ELT — data is ingested and loaded into the warehouse first, then transformed in place using dbt.
+
+---
 
 ## What This Project Does
 
-This pipeline follows an ELT architecture where raw data is ingested, loaded into a warehouse, and transformed into analytics-ready models.
-This project implements a complete analytics pipeline for U.S. flight delay data.
+This pipeline answers operational and business questions about U.S. domestic flight delays:
 
-It ingests multiple data sources including flight records, weather data, and holiday information, transforms them into standardized datasets, models them in BigQuery using dbt, and orchestrates the workflow with Apache Airflow.
-
-The goal of the project is to answer business and operational questions such as:
-
-- Which airlines experience the highest delays?
+- Which airlines experience the highest delay rates?
 - Which airports show the worst departure delay performance?
 - How much do weather conditions affect delays?
 - Do holidays increase delay rates?
 - Which factors drive delay variation most strongly?
 
-## Pipeline Overview
-
-- **Ingestion:** Python scripts collect and process flight, weather, and holiday data
-- **Storage:** Data is standardized and persisted as parquet files
-- **Database Loading:** Processed data is loaded into PostgreSQL for intermediate storage and validation
-- **Warehouse:** Curated datasets are loaded into BigQuery
-- **Transformation:** dbt builds staging and mart models
-- **Orchestration:** Airflow schedules and runs `dbt run` and `dbt test`
-- **Validation:** dbt tests enforce data quality and model reliability
+---
 
 ## Tech Stack
 
-- Python
-- PostgreSQL
-- SQL
-- Google Cloud Storage
-- Google BigQuery
-- dbt
-- Apache Airflow
-- Docker
-- Parquet
+| Layer | Tool |
+|---|---|
+| Ingestion | Python, Open-Meteo API |
+| Storage | Parquet, PostgreSQL |
+| Warehouse | Google BigQuery |
+| Transformation | dbt (dbt-bigquery) |
+| Orchestration | Apache Airflow 2.9.1 |
+| Containerization | Docker |
+
+---
 
 ## Project Structure
 
-```text
+```
 .
-├── airflow/            # Airflow Docker setup and DAGs
-├── data/               # Local raw and processed data (not tracked in Git)
-├── flight_dbt/         # dbt project
-├── notebooks/          # EDA and prototyping
-├── src/ingestion/      # Python ingestion scripts
-├── .env.example        # Example local configuration
-├── requirements.txt    # Python dependencies
+├── airflow/                  # Airflow Docker setup and DAGs
+│   ├── dags/
+│   │   └── flight_dbt_dag.py
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── .env.example
+├── flight_dbt/               # dbt project
+│   └── models/
+│       ├── staging/          # Source-facing standardization layer
+│       └── marts/            # Business-facing analytical models
+├── notebooks/                # EDA and prototyping
+├── src/ingestion/            # Python ingestion scripts
+├── data/                     # Local raw/processed data (not tracked in Git)
+├── .env.example
+├── requirements.txt
 └── README.md
 ```
 
-## Core Components
+---
 
-- `src/ingestion/ingest_raw.py`  
-  Converts raw flight CSV files into parquet format
+## Pipeline Overview
 
-- `src/ingestion/ingest_weather_api.py`  
-  Fetches historical weather data from Open-Meteo API
+### 1. Ingestion (`src/ingestion/`)
 
-- `src/ingestion/holidays.py`  
-  Loads U.S. holiday data into PostgreSQL
+| Script | Description |
+|---|---|
+| `ingest_raw.py` | Converts raw flight CSV files to Parquet format |
+| `ingest_weather_api.py` | Fetches historical weather data from Open-Meteo API |
+| `holidays.py` | Loads U.S. federal holiday data into PostgreSQL |
+| `parquet_to_db.py` | Loads curated Parquet datasets into PostgreSQL |
 
-- `src/ingestion/parquet_to_db.py`  
-  Loads curated parquet datasets into PostgreSQL
+> Ingestion scripts handle all cleaning and standardization. As a result, dbt staging models focus on source isolation rather than transformation — this is an intentional design decision to keep the boundary between Python and SQL responsibilities clear.
 
-- `flight_dbt/models/staging/`  
-  Staging layer models for standardized source access
+### 2. Warehouse Loading
 
-- `flight_dbt/models/marts/`  
-  Analytics-ready mart models and KPI tables
+Curated datasets are loaded from PostgreSQL into BigQuery for transformation and analysis.
 
-- `airflow/dags/flight_dbt_dag.py`  
-  Airflow DAG that orchestrates `dbt run` and `dbt test`
+### 3. dbt Transformation
 
-## Key Features
+The dbt project is structured into two layers:
 
-- End-to-end pipeline from ingestion to orchestration
-- Multi-source data integration
-- Modular dbt modeling with staging and marts layers
-- Automated Airflow scheduling
-- Retry handling and failure alerting
-- Data quality testing with dbt
-- Environment-based configuration without hardcoded secrets
-- Portable local setup using Docker
-- ELT pipeline architecture
+**Staging** — source-facing models that isolate upstream schema changes:
+- `stg_flight_delays` — flight-level delay records
+- `stg_airlines` — airline reference data
+- `stg_airports` — airport reference data
+- `stg_weather` — flight-level weather enrichment
+- `stg_holidays` — U.S. holiday calendar
+
+**Marts** — business-facing analytical models:
+- `enriched_flights` — joined dataset combining flights, weather, and holidays
+- `fct_airline_delay_summary` — aggregated delay metrics by airline
+- `fct_airport_departure_delay_summary` — departure delay metrics by airport, with composite performance score
+- `fct_weather_delay_impact_summary` — delay rate comparison across weather conditions
+- `fct_holiday_delay_impact_summary` — delay rate comparison across holiday vs. non-holiday periods
+
+### 4. Orchestration
+
+Airflow runs on Docker and schedules daily dbt runs:
+
+```
+dbt_run >> dbt_test
+```
+
+DAG features: daily schedule (`0 9 * * *`), `catchup=False`, 1 retry with 5-minute delay, email alerting on failure.
+
+---
+
+## Data Quality
+
+dbt tests are defined in `schema.yml` for both staging and mart layers:
+
+- `not_null` on all key columns
+- `unique` on primary keys (e.g. `airline_code`, `airport_id`)
+- `dbt_utils.unique_combination_of_columns` on composite keys (flight-level grain)
+- `dbt_utils.accepted_range` on derived metrics — `delay_rate` bounded between 0 and 1, `total_flights` must be ≥ 1
+
+---
+
+## Dashboard
+
+The pipeline outputs feed a BI dashboard with four views:
+
+**Overview** — high-level delay trends across airlines and airports
+
+**Airline Performance** — delay rate and average delay by carrier
+
+**Delay Drivers** — weather and holiday impact analysis
+
+**Recommendations** — operational insights derived from the data
+
+### Key Findings
+
+- Delay rates are moderately higher under bad weather conditions, confirming environmental impact on operations
+- Holiday periods do not significantly affect delay rates, indicating stable scheduling performance during peak travel
+- Delay rates vary considerably across airports, highlighting operational inefficiencies at specific locations
+- High-volume airlines tend to maintain more stable delay performance compared to smaller carriers
+- Airport-level differences appear to be a stronger driver of delays than external factors like weather or holidays
+
+---
 
 ## Setup
 
@@ -106,41 +155,26 @@ source venv311/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure local environment variables
+### 2. Configure environment variables
 
-Create `.env` from `.env.example` and provide your PostgreSQL connection details.
+```bash
+cp .env.example .env
+# Edit .env with your PostgreSQL connection details
+```
 
 ### 3. Configure dbt profile for Airflow
 
-Create:
-
-```text
-airflow/dbt/profiles.yml
+```bash
+cp airflow/dbt/profiles.yml.example airflow/dbt/profiles.yml
+# Add your BigQuery project configuration
 ```
-
-from:
-
-```text
-airflow/dbt/profiles.yml.example
-```
-
-and add your BigQuery project configuration.
 
 ### 4. Configure Airflow
 
-Create:
-
-```text
-airflow/.env
+```bash
+cp airflow/.env.example airflow/.env
+# Set admin credentials, alert email, and mount paths
 ```
-
-from:
-
-```text
-airflow/.env.example
-```
-
-This file can be used to override Airflow admin credentials, alert email, and mount paths.
 
 ### 5. Start Airflow
 
@@ -149,11 +183,7 @@ cd airflow
 docker compose up --build
 ```
 
-Then open:
-
-```text
-http://localhost:8080
-```
+Open [http://localhost:8080](http://localhost:8080)
 
 ### 6. Run dbt manually (optional)
 
@@ -163,89 +193,21 @@ dbt run
 dbt test
 ```
 
-## Data Models
+---
 
-The dbt project is structured into two main layers:
+## Design Decisions & Known Limitations
 
-- **Staging**  
-  Standardized source-facing models used to isolate upstream schema changes
+- **Ingestion is not yet orchestrated by Airflow** — ingestion scripts are run manually. Adding ingestion as Airflow tasks is the primary planned improvement.
+- **Weather enrichment uses a simplified approach** — weather is averaged at the airport-day level from Open-Meteo, and does not represent flight-level conditions at the exact departure time.
+- **Airflow uses SQLite as its metadata backend** — this is intentional for local development simplicity. A PostgreSQL backend would be required for any distributed or production deployment.
+- **Credentials are managed locally** — secrets are excluded from Git via `.gitignore`. A managed secrets service (e.g. GCP Secret Manager) would be appropriate for production.
 
-- **Marts**  
-  Business-facing analytical models used to answer project questions
-
-Main mart outputs include:
-
-- `enriched_flights`
-- `fct_airline_delay_summary`
-- `fct_airport_departure_delay_summary`
-- `fct_weather_delay_impact_summary`
-- `fct_holiday_delay_impact_summary`
+---
 
 ## Repository Notes
 
-- Large datasets are intentionally not tracked in Git
-- Credentials, Airflow metadata, dbt artifacts, and local logs are excluded via `.gitignore`
-- Example config files are included for reproducibility
-- Real secrets must remain local
+- Large datasets are not tracked in Git (`data/` is excluded)
+- Credentials, Airflow metadata, dbt artifacts, and logs are excluded via `.gitignore`
+- Example config files are provided for all environment files
+- Real secrets must remain local and never be committed
 
-## Current Status
-
-
-Completed components:
-
-- ingestion layer
-- parquet-based storage layer
-- PostgreSQL loading
-- BigQuery warehouse loading
-- dbt staging and mart models
-- dbt data quality tests
-- Airflow orchestration
-- scheduling, retries, and failure notifications
-
-## Dashboard
-
-This project includes a business intelligence dashboard built on top of the transformed data models.
-
-The dashboard provides insights into airline performance, delay drivers, and operational inefficiencies.
-
-
-### Overview
-![Overview](dashboard/screenshots/overview.png)
-
-### Airline Performance
-![Airline Analysis](dashboard/screenshots/flight%20delay%20analysis.png)
-
-### Delay Drivers
-![Delay Drivers](dashboard/screenshots/divers%20of%20flight%20delays.png)
-
-### Recommendations
-![Recommendations](dashboard/screenshots/Recommendations%20for%20Reducing%20Flight%20Delays.png)
-
-## Dashboard Insights
-
-- Delay rates are moderately higher under bad weather conditions, confirming environmental impact on operations  
-- Holiday periods do not significantly affect delay rates, indicating stable scheduling performance  
-- Delay rates vary considerably across airports, highlighting operational inefficiencies at specific locations  
-- High-volume airlines tend to maintain more stable delay performance compared to smaller carriers  
-- Airport-level differences appear to be a stronger driver of delays than external factors like holidays
-
-## Known Limitations
-
-- Weather enrichment uses a simplified approach and does not yet represent full airport-level weather coverage for every flight
-- Airflow setup is designed for local development, not a distributed production deployment
-- Secrets are managed locally through ignored config files rather than a managed secret service
-
-## Future Improvements
-
-- Add ingestion tasks directly into the Airflow DAG
-- Add BI / dashboard layer
-- Add source freshness monitoring
-- Integrate managed secrets storage
-- Add CI/CD checks for dbt and pipeline validation
-
-## Summary
-
-This project reflects a production-style data engineering workflow, including orchestration, testing, monitoring, and configuration management.
-This project demonstrates how to design and implement a production-style end-to-end data pipeline with ingestion, transformation, testing, and orchestration layers.
-
-It focuses on modularity, reproducibility, data quality, and analytics readiness, while also reflecting real-world engineering concerns such as scheduling, retries, alerting, and configuration management.
